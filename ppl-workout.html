@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PPL Program — Push · Pull · Legs</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:       #0a0a0f;
+    --surface:  #111118;
+    --card:     #18181f;
+    --border:   #252530;
+    --push:     #e8402a;
+    --pull:     #3b82f6;
+    --legs:     #22c55e;
+    --gold:     #f59e0b;
+    --text:     #f0f0f5;
+    --muted:    #6b6b80;
+    --tag-bg:   #1e1e2a;
+    --radius:   12px;
+    --shadow:   0 8px 32px rgba(0,0,0,.6);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ───── HERO ───── */
+  .hero {
+    position: relative;
+    overflow: hidden;
+    padding: 80px 24px 64px;
+    text-align: center;
+    background: linear-gradient(160deg, #0f0f1a 0%, #0a0a0f 60%);
+  }
+  .hero::before {
+    content:'';
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 50%, rgba(232,64,42,.12) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 50% at 80% 50%, rgba(59,130,246,.10) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 40% at 50% 100%, rgba(34,197,94,.08) 0%, transparent 70%);
+    pointer-events:none;
+  }
+  .hero-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .18em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 18px;
+  }
+  .hero h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(56px, 12vw, 112px);
+    letter-spacing: .04em;
+    line-height: 1;
+    background: linear-gradient(90deg, var(--push) 0%, #fff 40%, var(--pull) 70%, var(--legs) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-sub {
+    margin-top: 16px;
+    color: var(--muted);
+    font-size: 15px;
+    font-weight: 400;
+    max-width: 480px;
+    margin-inline: auto;
+  }
+  .hero-pills {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 32px;
+    flex-wrap: wrap;
+  }
+  .pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .03em;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+    text-decoration: none;
+    border: 1.5px solid transparent;
+  }
+  .pill:hover { transform: translateY(-2px); }
+  .pill-push { background: rgba(232,64,42,.15); border-color: var(--push); color: var(--push); }
+  .pill-pull { background: rgba(59,130,246,.15); border-color: var(--pull); color: var(--pull); }
+  .pill-legs { background: rgba(34,197,94,.15); border-color: var(--legs); color: var(--legs); }
+
+  /* ───── NAV TABS ───── */
+  .nav-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,10,15,.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 24px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav-inner::-webkit-scrollbar { display: none; }
+  .nav-tab {
+    flex-shrink: 0;
+    padding: 16px 22px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: var(--muted);
+    position: relative;
+    transition: color .2s;
+    white-space: nowrap;
+  }
+  .nav-tab::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 50%; right: 50%;
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+    transition: left .2s, right .2s;
+  }
+  .nav-tab.active { color: var(--text); }
+  .nav-tab.push-tab.active::after { background: var(--push); left: 16px; right: 16px; }
+  .nav-tab.pull-tab.active::after { background: var(--pull); left: 16px; right: 16px; }
+  .nav-tab.legs-tab.active::after { background: var(--legs); left: 16px; right: 16px; }
+
+  /* ───── CONTENT ───── */
+  .content {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+  }
+  .day-panel { display: none; }
+  .day-panel.active { display: block; }
+
+  /* ───── DAY HEADER ───── */
+  .day-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 40px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .day-header-left h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 52px;
+    letter-spacing: .05em;
+    line-height: 1;
+  }
+  .day-header-left h2 span { display: block; font-size: 18px; font-family: 'Inter', sans-serif; font-weight: 400; letter-spacing: .02em; margin-bottom: 4px; }
+  .push-color { color: var(--push); }
+  .pull-color { color: var(--pull); }
+  .legs-color { color: var(--legs); }
+
+  .muscle-map {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .muscle-tag {
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    background: var(--tag-bg);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  /* ───── EQUIPMENT TABS ───── */
+  .eq-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 4px;
+    margin-bottom: 32px;
+    width: fit-content;
+  }
+  .eq-tab {
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    transition: background .15s, color .15s;
+    white-space: nowrap;
+  }
+  .eq-tab.active {
+    background: var(--card);
+    color: var(--text);
+    box-shadow: 0 2px 8px rgba(0,0,0,.4);
+  }
+
+  /* ───── EXERCISE GRID ───── */
+  .eq-panel { display: none; }
+  .eq-panel.active { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+
+  /* ───── EXERCISE CARD ───── */
+  .ex-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: transform .2s, box-shadow .2s, border-color .2s;
+    position: relative;
+  }
+  .ex-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow);
+  }
+  .ex-card.starred { border-color: var(--gold); }
+  .ex-card.starred::before {
+    content: '⭐ KEY LIFT';
+    position: absolute;
+    top: 12px; right: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    color: var(--gold);
+    background: rgba(245,158,11,.12);
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(245,158,11,.3);
+  }
+
+  .card-accent {
+    height: 3px;
+  }
+  .push-accent { background: linear-gradient(90deg, var(--push), #ff6b50); }
+  .pull-accent { background: linear-gradient(90deg, var(--pull), #60a5fa); }
+  .legs-accent { background: linear-gradient(90deg, var(--legs), #4ade80); }
+
+  .card-body { padding: 20px; }
+  .ex-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 6px;
+    letter-spacing: .1em;
+  }
+  .ex-name {
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.25;
+    margin-bottom: 12px;
+    padding-right: 72px;
+  }
+  .muscle-row {
+    margin-bottom: 14px;
+  }
+  .muscle-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 5px;
+  }
+  .muscle-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 6px;
+  }
+  .badge-primary {
+    background: rgba(255,255,255,.08);
+    color: var(--text);
+    border: 1px solid rgba(255,255,255,.12);
+  }
+  .badge-secondary {
+    background: var(--tag-bg);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .ex-tip {
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.5;
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+    margin-top: 12px;
+  }
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
+  .sets-info {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .yt-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    background: rgba(255,0,0,.12);
+    color: #ff4444;
+    border: 1px solid rgba(255,0,0,.2);
+    transition: background .15s;
+  }
+  .yt-btn:hover { background: rgba(255,0,0,.22); }
+  .yt-icon { font-size: 14px; }
+
+  /* ───── SCHEDULE OVERVIEW ───── */
+  .week-strip {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 48px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  .week-day {
+    flex: 1;
+    min-width: 60px;
+    text-align: center;
+    padding: 12px 8px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    line-height: 1.3;
+  }
+  .week-day-label { color: var(--muted); font-size: 10px; margin-bottom: 4px; }
+  .week-day-type { font-size: 13px; }
+  .wd-push { background: rgba(232,64,42,.12); color: var(--push); border: 1px solid rgba(232,64,42,.25); }
+  .wd-pull { background: rgba(59,130,246,.12); color: var(--pull); border: 1px solid rgba(59,130,246,.25); }
+  .wd-legs { background: rgba(34,197,94,.12); color: var(--legs); border: 1px solid rgba(34,197,94,.25); }
+  .wd-rest { background: var(--tag-bg); color: var(--muted); border: 1px solid var(--border); }
+
+  /* ───── SECTION HEADER ───── */
+  .section-lbl {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .12em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .section-lbl::after { content:''; flex:1; height:1px; background: var(--border); }
+
+  /* ───── RESPONSIVE ───── */
+  @media (max-width: 600px) {
+    .hero h1 { font-size: 56px; }
+    .eq-panel.active { grid-template-columns: 1fr; }
+    .day-header { flex-direction: column; align-items: flex-start; }
+    .week-strip { gap: 4px; }
+    .week-day { min-width: 40px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════ HERO ════════════ -->
+<section class="hero">
+  <div class="hero-eyebrow">Hevy · PPL Program · 6 days / week</div>
+  <h1>PUSH · PULL · LEGS</h1>
+  <p class="hero-sub">A complete science-based program targeting every major muscle group — three equipment paths, one goal.</p>
+  <div class="hero-pills">
+    <a class="pill pill-push" href="#" onclick="switchDay('push');return false;">🔴 PUSH DAY</a>
+    <a class="pill pill-pull" href="#" onclick="switchDay('pull');return false;">🔵 PULL DAY</a>
+    <a class="pill pill-legs" href="#" onclick="switchDay('legs');return false;">🟢 LEG DAY</a>
+  </div>
+</section>
+
+<!-- ════════════ NAV ════════════ -->
+<div class="nav-wrap">
+  <div class="nav-inner">
+    <button class="nav-tab push-tab active" onclick="switchDay('push')">🔴 Push Day</button>
+    <button class="nav-tab pull-tab" onclick="switchDay('pull')">🔵 Pull Day</button>
+    <button class="nav-tab legs-tab" onclick="switchDay('legs')">🟢 Leg Day</button>
+  </div>
+</div>
+
+<!-- ════════════ CONTENT ════════════ -->
+<div class="content">
+
+  <!-- WEEKLY SCHEDULE STRIP -->
+  <div class="week-strip">
+    <div class="week-day wd-push"><div class="week-day-label">MON</div><div class="week-day-type">PUSH</div></div>
+    <div class="week-day wd-pull"><div class="week-day-label">TUE</div><div class="week-day-type">PULL</div></div>
+    <div class="week-day wd-legs"><div class="week-day-label">WED</div><div class="week-day-type">LEGS</div></div>
+    <div class="week-day wd-rest"><div class="week-day-label">THU</div><div class="week-day-type">REST</div></div>
+    <div class="week-day wd-push"><div class="week-day-label">FRI</div><div class="week-day-type">PUSH</div></div>
+    <div class="week-day wd-pull"><div class="week-day-label">SAT</div><div class="week-day-type">PULL</div></div>
+    <div class="week-day wd-legs"><div class="week-day-label">SUN</div><div class="week-day-type">LEGS</div></div>
+  </div>
+
+  <!-- ════════════ PUSH DAY ════════════ -->
+  <div id="panel-push" class="day-panel active">
+    <div class="day-header">
+      <div class="day-header-left">
+        <h2><span class="push-color">DAY 01</span>PUSH</h2>
+        <p style="color:var(--muted);font-size:13px;margin-top:8px;">Chest · Shoulders · Triceps</p>
+      </div>
+      <div>
+        <div style="margin-bottom:8px;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;">Muscles Trained</div>
+        <div class="muscle-map">
+          <span class="muscle-tag">Pecs (Major & Minor)</span>
+          <span class="muscle-tag">Anterior Deltoid</span>
+          <span class="muscle-tag">Lateral Deltoid</span>
+          <span class="muscle-tag">Triceps</span>
+          <span class="muscle-tag">Serratus Anterior</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- EQ TABS PUSH -->
+    <div class="eq-tabs" id="eq-push">
+      <button class="eq-tab active" onclick="switchEq('push','dumbbells')">🏋️ Dumbbells</button>
+      <button class="eq-tab" onclick="switchEq('push','bands')">🔴 Resistance Bands</button>
+      <button class="eq-tab" onclick="switchEq('push','bw')">💪 Bodyweight</button>
+    </div>
+
+    <!-- DUMBBELLS -->
+    <div id="push-dumbbells" class="eq-panel active">
+      <div class="section-lbl">Dumbbell Push Exercises</div>
+
+      <!-- card 1 -->
+      <div class="ex-card starred">
+        <div class="card-accent push-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PUSH · DB · 01</div>
+          <div class="ex-name">Dumbbell Flat Bench Press</div>
+          <div class="muscle-row">
+            <div class="muscle-label">Primary</div>
+            <div class="muscle-badges"><span class="badge badge-primary">Pectoralis Major</span></div>
+          </div>
+          <div class="muscle-row">
+            <div class="muscle-label">Secondary</div>
+            <div class="muscle-badges">
+              <span class="badge badge-secondary">Anterior Deltoid</span>
+              <span class="badge badge-secondary">Triceps</span>
+              <span class="badge badge-secondary">Serratus Anterior</span>
+            </div>
+          </div>
+          <div class="ex-tip">Lie flat, dumbbells at chest width. Press straight up then control down in a slight arc. Keep shoulder blades pinched together throughout — this protects your rotator cuff and maximises chest stretch at the bottom.</div>
+        </div>
+        <div class="card-footer">
+          <span class="sets-info">4 × 8–12 reps</span>
+          <a class="yt-btn" href="https://www.youtube.com/results?search_query=dumbbell+flat+bench+press+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a>
+        </div>
+      </div>
+
+      <!-- card 2 -->
+      <div class="ex-card starred">
+        <div class="card-accent push-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PUSH · DB · 02</div>
+          <div class="ex-name">Dumbbell Overhead Press</div>
+          <div class="muscle-row">
+            <div class="muscle-label">Primary</div>
+            <div class="muscle-badges"><span class="badge badge-primary">Anterior Deltoid</span><span class="badge badge-primary">Lateral Deltoid</span></div>
+          </div>
+          <div class="muscle-row">
+            <div class="muscle-label">Secondary</div>
+            <div class="muscle-badges">
+              <span class="badge badge-secondary">Triceps</span>
+              <span class="badge badge-secondary">Upper Pecs</span>
+              <span class="badge badge-secondary">Traps</span>
+            </div>
+          </div>
+          <div class="ex-tip">Seated or standing. Start with dumbbells at ear level, palms forward. Press overhead in a slight inward arc — avoid flaring elbows too wide. Brace your core to prevent lower-back hyperextension.</div>
+        </div>
+        <div class="card-footer">
+          <span class="sets-info">4 × 8–10 reps</span>
+          <a class="yt-btn" href="https://www.youtube.com/results?search_query=dumbbell+overhead+press+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a>
+        </div>
+      </div>
+
+      <!-- card 3 -->
+      <div class="ex-card">
+        <div class="card-accent push-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PUSH · DB · 03</div>
+          <div class="ex-name">Incline Dumbbell Press</div>
+          <div class="muscle-row">
+            <div class="muscle-label">Primary</div>
+            <div class="muscle-badges"><span class="badge badge-primary">Upper Pectoralis</span></div>
+          </div>
+          <div class="muscle-row">
+            <div class="muscle-label">Secondary</div>
+            <div class="muscle-badges">
+              <span class="badge badge-secondary">Anterior Deltoid</span>
+              <span class="badge badge-secondary">Triceps</span>
+            </div>
+          </div>
+          <div class="ex-tip">Set bench to 30–45°. Press at a slight inward arc. The incline shifts emphasis to the clavicular head — essential for a full upper-chest look. Keep the rep speed controlled; don't bounce at the bottom.</div>
+        </div>
+        <div class="card-footer">
+          <span class="sets-info">3 × 10–12 reps</span>
+          <a class="yt-btn" href="https://www.youtube.com/results?search_query=incline+dumbbell+press+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a>
+        </div>
+      </div>
+
+      <!-- card 4 -->
+      <div class="ex-card">
+        <div class="card-accent push-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PUSH · DB · 04</div>
+          <div class="ex-name">Dumbbell Lateral Raise</div>
+          <div class="muscle-row">
+            <div class="muscle-label">Primary</div>
+            <div class="muscle-badges"><span class="badge badge-primary">Lateral Deltoid</span></div>
+          </div>
+          <div class="muscle-row">
+            <div class="muscle-label">Secondary</div>
+            <div class="muscle-badges">
+              <span class="badge badge-secondary">Supraspinatus</span>
+              <span class="badge badge-secondary">Traps (upper)</span>
+            </div>
+          </div>
+          <div class="ex-tip">Slight forward lean, slight elbow bend. Raise to shoulder height with pinkies slightly higher than thumbs (like pouring a jug). Avoid momentum — control the descent. Go light and high-rep for best stimulus.</div>
+        </div>
+        <div class="card-footer">
+          <span class="sets-info">3 × 15–20 reps</span>
+          <a class="yt-btn" href="https://www.youtube.com/results?search_query=dumbbell+lateral+raise+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a>
+        </div>
+      </div>
+
+      <!-- card 5 -->
+      <div class="ex-card">
+        <div class="card-accent push-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PUSH · DB · 05</div>
+          <div class="ex-name">Dumbbell Chest Fly</div>
+          <div class="muscle-row">
+            <div class="muscle-label">Primary</div>
+            <div class="muscle-badges"><span class="badge badge-primary">Pectoralis Major (stretch)</span></div>
+          </div>
+          <div class="muscle-row">
+            <div class="muscle-label">Secondary</div>
+            <div class="muscle-badges">
+              <span class="badge badge-secondary">Anterior Deltoid</span>
+              <span class="badge badge-secondary">Biceps (short head)</span>
+            </div>
+          </div>
+          <div class="ex-tip">Flat bench, slight elbow bend throughout. Open arms wide in an arc until you feel a deep chest stretch, then squeeze pecs to close. Do NOT press — this is a fly. Keep the elbows at a fixed angle; the movement is pure shoulder adduction.</div>
+        </div>
+        <div class="card-footer">
+          <span class="sets-info">3 × 12–15 reps</span>
+          <a class="yt-btn" href="https://www.youtube.com/results?search_query=dumbbell+chest+fly+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a>
+        </div>
+      </div>
+
+      <!-- card 6 -->
+      <div class="ex-card starred">
+        <div class="card-accent push-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PUSH · DB · 06</div>
+          <div class="ex-name">Overhead Triceps Extension</div>
+          <div class="muscle-row">
+            <div class="muscle-label">Primary</div>
+            <div class="muscle-badges"><span class="badge badge-primary">Triceps (long head)</span></div>
+          </div>
+          <div class="muscle-row">
+            <div class="muscle-label">Secondary</div>
+            <div class="muscle-badges">
+              <span class="badge badge-secondary">Medial & Lateral Triceps Head</span>
+            </div>
+          </div>
+          <div class="ex-tip">Hold one dumbbell with both hands overhead. Lower behind your head slowly by bending elbows, keeping them pointed straight up. The overhead position is key — it fully stretches the long head, which makes up 2/3 of your triceps mass.</div>
+        </div>
+        <div class="card-footer">
+          <span class="sets-info">3 × 10–14 reps</span>
+          <a class="yt-btn" href="https://www.youtube.com/results?search_query=overhead+triceps+extension+dumbbell+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RESISTANCE BANDS -->
+    <div id="push-bands" class="eq-panel">
+      <div class="section-lbl">Resistance Band Push Exercises</div>
+
+      <div class="ex-card starred">
+        <div class="card-accent push-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PUSH · BAND · 01</div>
+          <div class="ex-name">Band Chest Press</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Pectoralis Major</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Anterior Deltoid</span><span class="badge badge-secondary">Triceps</span></div></div>
+          <div class="ex-tip">Anchor band behind you at chest height (door anchor or pole). Stand with band in each hand, press forward and slightly inward. Band resistance peaks at peak contraction — opposite to dumbbells — great for chest variety.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">4 × 12–15 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=resistance+band+chest+press+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card">
+        <div class="card-accent push-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PUSH · BAND · 02</div>
+          <div class="ex-name">Band Lateral Raise</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Lateral Deltoid</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Supraspinatus</span><span class="badge badge-secondary">Upper Traps</span></div></div>
+          <div class="ex-tip">Stand on the band, one end in each hand. Raise arms sideways to shoulder height. The band's ascending resistance adds difficulty at the top — the hardest part of the range — making this very effective for lateral head isolation.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">3 × 15–20 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=resistance+band+lateral+raise+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card starred">
+        <div class="card-accent push-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PUSH · BAND · 03</div>
+          <div class="ex-name">Band Overhead Press</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Deltoid (Anterior + Lateral)</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Triceps</span><span class="badge badge-secondary">Upper Traps</span></div></div>
+          <div class="ex-tip">Stand on the band, press from shoulders to overhead. Keep core braced to avoid arch. Can be done seated for more stability. Great for progressive overload when different strength bands are used.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">4 × 10–12 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=resistance+band+overhead+press+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card">
+        <div class="card-accent push-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PUSH · BAND · 04</div>
+          <div class="ex-name">Band Triceps Pushdown</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Triceps (Lateral + Medial Head)</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Forearm Extensors</span></div></div>
+          <div class="ex-tip">Anchor band overhead. Grip ends, keep elbows locked at sides, push down until arms are straight. Squeeze hard at the bottom. The pulldown simulates a cable machine and is one of the best triceps isolation exercises with bands.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">3 × 15–18 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=resistance+band+triceps+pushdown+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card">
+        <div class="card-accent push-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PUSH · BAND · 05</div>
+          <div class="ex-name">Band Chest Fly / Cross-Body</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Pectoralis Major</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Anterior Deltoid</span></div></div>
+          <div class="ex-tip">Anchor band at shoulder height from one side. Step away and perform a single-arm cross-body fly sweeping your arm across your body. Allows excellent range of motion and constant tension — mimics cable crossovers perfectly.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">3 × 12 reps each side</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=resistance+band+chest+fly+crossover+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+    </div>
+
+    <!-- BODYWEIGHT -->
+    <div id="push-bw" class="eq-panel">
+      <div class="section-lbl">Bodyweight Push Exercises</div>
+
+      <div class="ex-card starred">
+        <div class="card-accent push-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PUSH · BW · 01</div>
+          <div class="ex-name">Push-Up (Chest Emphasis)</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Pectoralis Major</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Anterior Deltoid</span><span class="badge badge-secondary">Triceps</span><span class="badge badge-secondary">Serratus Anterior</span></div></div>
+          <div class="ex-tip">Hands slightly wider than shoulder-width. Lower chest to ground in 2–3 sec, press explosively back up. At the top, actively protract scapulae (push hands into floor). Add a weighted vest or elevate feet to increase difficulty.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">4 × Max reps (or 15–25)</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=perfect+push+up+form+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card starred">
+        <div class="card-accent push-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PUSH · BW · 02</div>
+          <div class="ex-name">Dips (Triceps/Chest)</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Triceps</span><span class="badge badge-primary">Pectoralis Major (lower)</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Anterior Deltoid</span><span class="badge badge-secondary">Rhomboids</span></div></div>
+          <div class="ex-tip">For chest: lean forward, elbows wide. For triceps: stay upright, elbows close. Lower until upper arms are parallel to floor, press back up. This is one of the best compound upper-body exercises — weight it with a dip belt as you progress.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">4 × 8–15 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=dips+chest+triceps+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card">
+        <div class="card-accent push-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PUSH · BW · 03</div>
+          <div class="ex-name">Pike Push-Up</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Anterior Deltoid</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Triceps</span><span class="badge badge-secondary">Upper Pecs</span><span class="badge badge-secondary">Traps</span></div></div>
+          <div class="ex-tip">Hips raised high forming an inverted V. Lower head toward floor between hands. This targets the shoulder in the same movement pattern as an overhead press. Progress to elevated pike push-ups then eventually handstand push-ups.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">4 × 10–15 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=pike+push+up+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card">
+        <div class="card-accent push-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PUSH · BW · 04</div>
+          <div class="ex-name">Diamond Push-Up</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Triceps</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Inner Pecs</span><span class="badge badge-secondary">Anterior Deltoid</span></div></div>
+          <div class="ex-tip">Hands forming a diamond shape under your chest. Elbows stay close to body throughout. Targets the medial and lateral triceps heads effectively without any equipment. Keep hips level — don't let them sag or pike.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">3 × 12–18 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=diamond+push+up+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card">
+        <div class="card-accent push-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PUSH · BW · 05</div>
+          <div class="ex-name">Decline Push-Up</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Upper Pectoralis</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Anterior Deltoid</span><span class="badge badge-secondary">Triceps</span></div></div>
+          <div class="ex-tip">Feet elevated on a chair or bench, hands on floor. The decline angle shifts load to the upper chest (clavicular head), replicating an incline press. The higher the feet, the more shoulder involvement. Keep core tight throughout.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">3 × 12–20 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=decline+push+up+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════ PULL DAY ════════════ -->
+  <div id="panel-pull" class="day-panel">
+    <div class="day-header">
+      <div class="day-header-left">
+        <h2><span class="pull-color">DAY 02</span>PULL</h2>
+        <p style="color:var(--muted);font-size:13px;margin-top:8px;">Back (Lats, Rhomboids, Traps) · Biceps · Rear Delts</p>
+      </div>
+      <div>
+        <div style="margin-bottom:8px;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;">Muscles Trained</div>
+        <div class="muscle-map">
+          <span class="muscle-tag">Latissimus Dorsi</span>
+          <span class="muscle-tag">Rhomboids</span>
+          <span class="muscle-tag">Trapezius</span>
+          <span class="muscle-tag">Rear Deltoid</span>
+          <span class="muscle-tag">Biceps</span>
+          <span class="muscle-tag">Brachialis</span>
+          <span class="muscle-tag">Erector Spinae</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="eq-tabs" id="eq-pull">
+      <button class="eq-tab active" onclick="switchEq('pull','dumbbells')">🏋️ Dumbbells</button>
+      <button class="eq-tab" onclick="switchEq('pull','bands')">🔴 Resistance Bands</button>
+      <button class="eq-tab" onclick="switchEq('pull','bw')">💪 Bodyweight</button>
+    </div>
+
+    <!-- PULL DUMBBELLS -->
+    <div id="pull-dumbbells" class="eq-panel active">
+      <div class="section-lbl">Dumbbell Pull Exercises</div>
+
+      <div class="ex-card starred">
+        <div class="card-accent pull-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PULL · DB · 01</div>
+          <div class="ex-name">Dumbbell Romanian Deadlift</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Hamstrings</span><span class="badge badge-primary">Erector Spinae</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Glutes</span><span class="badge badge-secondary">Lats (stabiliser)</span><span class="badge badge-secondary">Traps</span></div></div>
+          <div class="ex-tip">Hold dumbbells in front of thighs. Hinge at hips pushing them back while keeping a neutral spine and soft knees. Feel a deep hamstring stretch then drive hips forward. This is a posterior chain staple — essential for pull day.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">4 × 8–10 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=dumbbell+romanian+deadlift+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card starred">
+        <div class="card-accent pull-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PULL · DB · 02</div>
+          <div class="ex-name">Single-Arm Dumbbell Row</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Latissimus Dorsi</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Rhomboids</span><span class="badge badge-secondary">Rear Delt</span><span class="badge badge-secondary">Biceps</span><span class="badge badge-secondary">Traps</span></div></div>
+          <div class="ex-tip">Knee and hand on bench for support. Pull dumbbell up to hip — NOT to shoulder. Elbow travels behind torso. Squeeze the lat at the top. Think "elbow to pocket" not "elbow to ceiling." One of the best lat-builders with dumbbells.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">4 × 10–12 reps / side</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=single+arm+dumbbell+row+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card">
+        <div class="card-accent pull-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PULL · DB · 03</div>
+          <div class="ex-name">Dumbbell Bent-Over Row</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Rhomboids</span><span class="badge badge-primary">Mid-Traps</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Lats</span><span class="badge badge-secondary">Biceps</span><span class="badge badge-secondary">Erectors</span></div></div>
+          <div class="ex-tip">Hinge forward ~45°. Pull both dumbbells up toward your lower chest, squeezing shoulder blades together. This targets the mid-back thickness more than the single-arm row. Keep your lower back flat — no rounding.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">4 × 10–12 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=dumbbell+bent+over+row+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card starred">
+        <div class="card-accent pull-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PULL · DB · 04</div>
+          <div class="ex-name">Dumbbell Bicep Curl</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Biceps Brachii</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Brachialis</span><span class="badge badge-secondary">Brachioradialis</span></div></div>
+          <div class="ex-tip">Supinate (rotate palm up) as you curl — this is critical to engage the full biceps brachii, not just the brachialis. Avoid swinging — strict form beats heavy weight. Alternate arms or do both simultaneously. Pause at full contraction.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">3 × 10–14 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=dumbbell+bicep+curl+perfect+form+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card">
+        <div class="card-accent pull-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PULL · DB · 05</div>
+          <div class="ex-name">Rear Delt Fly (Reverse Fly)</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Posterior Deltoid</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Rhomboids</span><span class="badge badge-secondary">Mid-Traps</span><span class="badge badge-secondary">Infraspinatus</span></div></div>
+          <div class="ex-tip">Hinge forward until torso is parallel to floor. Slight elbow bend. Raise arms outward and up in an arc, squeezing rear delts at the top. Avoid shrugging — keep traps relaxed. This is often undertrained and critical for shoulder balance and posture.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">3 × 15–20 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=dumbbell+rear+delt+fly+reverse+fly+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card">
+        <div class="card-accent pull-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PULL · DB · 06</div>
+          <div class="ex-name">Hammer Curl</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Brachialis</span><span class="badge badge-primary">Brachioradialis</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Biceps Brachii</span><span class="badge badge-secondary">Forearm</span></div></div>
+          <div class="ex-tip">Neutral grip (thumbs up), curl without rotation. Brachialis sits under the bicep — building it pushes the bicep up visually. Pair with supinated curls every session for complete arm development. Can be done alternating or cross-body.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">3 × 12–15 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=hammer+curl+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+    </div>
+
+    <!-- PULL BANDS -->
+    <div id="pull-bands" class="eq-panel">
+      <div class="section-lbl">Resistance Band Pull Exercises</div>
+
+      <div class="ex-card starred">
+        <div class="card-accent pull-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PULL · BAND · 01</div>
+          <div class="ex-name">Band Lat Pulldown</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Latissimus Dorsi</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Biceps</span><span class="badge badge-secondary">Rear Delt</span><span class="badge badge-secondary">Teres Major</span></div></div>
+          <div class="ex-tip">Anchor band overhead. Kneel or sit below it. Pull the band down to your upper chest while slightly leaning back. Drive elbows down and back. This is the closest band equivalent to a cable lat pulldown — excellent for lats.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">4 × 12–15 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=resistance+band+lat+pulldown+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card">
+        <div class="card-accent pull-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PULL · BAND · 02</div>
+          <div class="ex-name">Band Seated Row</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Rhomboids</span><span class="badge badge-primary">Mid-Traps</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Lats</span><span class="badge badge-secondary">Biceps</span><span class="badge badge-secondary">Rear Delt</span></div></div>
+          <div class="ex-tip">Sit on floor, loop band around feet. Row hands to your abdomen, squeezing shoulder blades together. Maintain an upright torso — don't lean back excessively. This mimics a cable seated row perfectly.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">4 × 12–15 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=resistance+band+seated+row+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card starred">
+        <div class="card-accent pull-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PULL · BAND · 03</div>
+          <div class="ex-name">Band Bicep Curl</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Biceps Brachii</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Brachialis</span><span class="badge badge-secondary">Brachioradialis</span></div></div>
+          <div class="ex-tip">Stand on the band, hands supinated (palms up). Curl both hands up. The ascending resistance of the band challenges you more at peak contraction than a dumbbell does — excellent for biceps peak stimulus.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">3 × 15 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=resistance+band+bicep+curl+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card">
+        <div class="card-accent pull-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PULL · BAND · 04</div>
+          <div class="ex-name">Band Face Pull</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Rear Deltoid</span><span class="badge badge-primary">External Rotators</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Mid-Traps</span><span class="badge badge-secondary">Rhomboids</span><span class="badge badge-secondary">Infraspinatus</span></div></div>
+          <div class="ex-tip">Anchor band at face height. Pull both ends to your face with elbows flaring high and out, like a goalpost. The external rotation component at the end is critical — it trains the rotator cuff and combats internal rotation from pressing. Do this every pull session.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">3 × 15–20 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=resistance+band+face+pull+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card">
+        <div class="card-accent pull-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PULL · BAND · 05</div>
+          <div class="ex-name">Band Pull-Apart</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Rear Deltoid</span><span class="badge badge-primary">Mid-Traps</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Rhomboids</span><span class="badge badge-secondary">Rotator Cuff</span></div></div>
+          <div class="ex-tip">Hold band with both hands at shoulder width in front of you. Pull apart horizontally until band touches chest. Arms stay straight. Excellent upper-back and posture exercise — often used as a warm-up or finisher. Can do 25–30 reps per set.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">3 × 20–25 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=resistance+band+pull+apart+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+    </div>
+
+    <!-- PULL BODYWEIGHT -->
+    <div id="pull-bw" class="eq-panel">
+      <div class="section-lbl">Bodyweight Pull Exercises</div>
+
+      <div class="ex-card starred">
+        <div class="card-accent pull-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PULL · BW · 01</div>
+          <div class="ex-name">Pull-Up / Chin-Up</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Latissimus Dorsi</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Biceps</span><span class="badge badge-secondary">Rear Delt</span><span class="badge badge-secondary">Teres Major</span><span class="badge badge-secondary">Rhomboids</span></div></div>
+          <div class="ex-tip">Pull-up (overhand) = more lats. Chin-up (underhand) = more biceps. Dead hang at bottom. Pull until chin clears bar. Avoid kipping. This is the single best bodyweight back exercise. Add weight when you can do 12+ reps.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">4 × Max reps (or 5–12)</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=pull+up+perfect+form+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card starred">
+        <div class="card-accent pull-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PULL · BW · 02</div>
+          <div class="ex-name">Inverted Row (Australian Pull-Up)</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Rhomboids</span><span class="badge badge-primary">Mid-Traps</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Lats</span><span class="badge badge-secondary">Biceps</span><span class="badge badge-secondary">Rear Delt</span></div></div>
+          <div class="ex-tip">Use a low bar or table. Lie underneath and grip the bar with straight arms. Row your chest up to the bar, squeezing shoulder blades together. Body stays straight. Easier than pull-ups — great for beginners or as supplemental work. Elevate feet to increase difficulty.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">4 × 10–15 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=inverted+row+australian+pullup+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card">
+        <div class="card-accent pull-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PULL · BW · 03</div>
+          <div class="ex-name">Superman Hold / Back Extension</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Erector Spinae</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Glutes</span><span class="badge badge-secondary">Hamstrings</span><span class="badge badge-secondary">Rhomboids</span></div></div>
+          <div class="ex-tip">Lie face down, arms extended. Simultaneously lift arms, chest, and legs off the floor. Hold 2–3 sec at the top. Works the entire posterior chain isometrically. Slow, controlled reps are key — this is underrated as a lower-back strength builder.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">3 × 12–15 reps (3 sec hold)</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=superman+hold+back+extension+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card">
+        <div class="card-accent pull-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">PULL · BW · 04</div>
+          <div class="ex-name">Doorframe Bicep Curl</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Biceps Brachii</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Brachialis</span><span class="badge badge-secondary">Forearms</span></div></div>
+          <div class="ex-tip">Grip a sturdy doorframe edge with supinated palms. Lean back and curl your bodyweight up. Adjust foot placement to control resistance. A creative no-equipment bicep solution. Can also be done with a towel looped around a pole.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">3 × 12–15 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=bodyweight+bicep+curl+doorframe+towel+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════ LEG DAY ════════════ -->
+  <div id="panel-legs" class="day-panel">
+    <div class="day-header">
+      <div class="day-header-left">
+        <h2><span class="legs-color">DAY 03</span>LEGS</h2>
+        <p style="color:var(--muted);font-size:13px;margin-top:8px;">Quads · Hamstrings · Glutes · Calves · Hip Flexors</p>
+      </div>
+      <div>
+        <div style="margin-bottom:8px;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;">Muscles Trained</div>
+        <div class="muscle-map">
+          <span class="muscle-tag">Quadriceps (all 4 heads)</span>
+          <span class="muscle-tag">Hamstrings</span>
+          <span class="muscle-tag">Gluteus Maximus</span>
+          <span class="muscle-tag">Gluteus Medius</span>
+          <span class="muscle-tag">Calves (Gastrocnemius + Soleus)</span>
+          <span class="muscle-tag">Adductors</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="eq-tabs" id="eq-legs">
+      <button class="eq-tab active" onclick="switchEq('legs','dumbbells')">🏋️ Dumbbells</button>
+      <button class="eq-tab" onclick="switchEq('legs','bands')">🔴 Resistance Bands</button>
+      <button class="eq-tab" onclick="switchEq('legs','bw')">💪 Bodyweight</button>
+    </div>
+
+    <!-- LEGS DUMBBELLS -->
+    <div id="legs-dumbbells" class="eq-panel active">
+      <div class="section-lbl">Dumbbell Leg Exercises</div>
+
+      <div class="ex-card starred">
+        <div class="card-accent legs-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">LEGS · DB · 01</div>
+          <div class="ex-name">Dumbbell Goblet Squat</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Quadriceps</span><span class="badge badge-primary">Glutes</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Hamstrings</span><span class="badge badge-secondary">Core</span><span class="badge badge-secondary">Adductors</span></div></div>
+          <div class="ex-tip">Hold one dumbbell vertically at chest. Feet shoulder-width, toes slightly out. Squat deep — aim to get thighs parallel or below. Elbows brush inside thighs at the bottom. The goblet position naturally keeps the torso upright, making this safer and more effective than a back squat for beginners.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">4 × 10–15 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=dumbbell+goblet+squat+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card starred">
+        <div class="card-accent legs-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">LEGS · DB · 02</div>
+          <div class="ex-name">Dumbbell Romanian Deadlift</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Hamstrings</span><span class="badge badge-primary">Glutes</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Erector Spinae</span><span class="badge badge-secondary">Adductors</span></div></div>
+          <div class="ex-tip">Hip hinge with soft knees — NOT a back extension. Lower dumbbells along legs until deep hamstring stretch, then drive hips forward to stand. Feel the stretch; if you don't, you're squatting it. The single most important posterior-chain exercise on leg day.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">4 × 8–12 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=dumbbell+romanian+deadlift+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card">
+        <div class="card-accent legs-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">LEGS · DB · 03</div>
+          <div class="ex-name">Dumbbell Walking Lunge</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Quads</span><span class="badge badge-primary">Glutes</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Hamstrings</span><span class="badge badge-secondary">Hip Flexors</span><span class="badge badge-secondary">Calves</span></div></div>
+          <div class="ex-tip">Dumbbells at sides. Step forward, lower rear knee toward floor, push off front foot to take the next step. Keep front knee tracking over 2nd toe — no caving in. The unilateral nature makes this excellent for correcting left-right imbalances.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">3 × 12 steps / leg</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=dumbbell+walking+lunge+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card">
+        <div class="card-accent legs-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">LEGS · DB · 04</div>
+          <div class="ex-name">Dumbbell Step-Up</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Glutes</span><span class="badge badge-primary">Quads</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Hamstrings</span><span class="badge badge-secondary">Core</span></div></div>
+          <div class="ex-tip">Hold dumbbells, step onto a sturdy bench or box with one foot. Drive through the heel of the top foot to stand on the bench. Don't push off the back foot. Control the descent. Height of box determines quad vs glute emphasis — higher box = more glutes.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">3 × 10–12 reps / leg</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=dumbbell+step+up+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card starred">
+        <div class="card-accent legs-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">LEGS · DB · 05</div>
+          <div class="ex-name">Single-Leg Romanian Deadlift</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Hamstrings</span><span class="badge badge-primary">Glutes</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Gluteus Medius</span><span class="badge badge-secondary">Core Stabilisers</span></div></div>
+          <div class="ex-tip">Balance on one leg, dumbbell in opposite hand. Hinge forward, extending free leg behind. Keep hips square — don't rotate open. The balance demand recruits the gluteus medius heavily. One of the best exercises for hip stability and posterior-chain development.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">3 × 10 reps / leg</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=single+leg+romanian+deadlift+dumbbell+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card">
+        <div class="card-accent legs-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">LEGS · DB · 06</div>
+          <div class="ex-name">Standing Calf Raise</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Gastrocnemius</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Soleus</span><span class="badge badge-secondary">Tibialis Posterior</span></div></div>
+          <div class="ex-tip">Hold dumbbells, stand on edge of a step for full range of motion. Lower heel all the way down for a deep stretch, then rise to full tippy-toe. The full range of motion (especially the bottom stretch) is key — partial reps leave gains on the table. Calves respond well to high reps.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">4 × 15–20 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=standing+calf+raise+dumbbell+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+    </div>
+
+    <!-- LEGS BANDS -->
+    <div id="legs-bands" class="eq-panel">
+      <div class="section-lbl">Resistance Band Leg Exercises</div>
+
+      <div class="ex-card starred">
+        <div class="card-accent legs-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">LEGS · BAND · 01</div>
+          <div class="ex-name">Band Squat</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Quadriceps</span><span class="badge badge-primary">Glutes</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Hamstrings</span><span class="badge badge-secondary">Core</span></div></div>
+          <div class="ex-tip">Stand on band, hold ends at shoulders (or crossed over chest). Squat as deep as mobility allows. Bands apply more resistance at the top — this actually reinforces the lock-out and glute activation that bodyweight squats often miss. Can also loop around thighs for a wider activation.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">4 × 15–20 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=resistance+band+squat+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card starred">
+        <div class="card-accent legs-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">LEGS · BAND · 02</div>
+          <div class="ex-name">Band Hip Thrust / Glute Bridge</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Gluteus Maximus</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Hamstrings</span><span class="badge badge-secondary">Core</span><span class="badge badge-secondary">Hip Flexors (stretch)</span></div></div>
+          <div class="ex-tip">Place band over hips, anchored under hands or feet. Lie on back, feet flat, drive hips up by squeezing glutes hard. Hold 1–2 sec at the top — this squeeze is everything. Glute bridges are the most direct glute stimulus available without a barbell. Don't hyperextend your lower back.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">4 × 15–20 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=resistance+band+glute+bridge+hip+thrust+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card">
+        <div class="card-accent legs-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">LEGS · BAND · 03</div>
+          <div class="ex-name">Band Monster Walk / Lateral Walk</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Gluteus Medius</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Gluteus Minimus</span><span class="badge badge-secondary">TFL</span><span class="badge badge-secondary">Hip Abductors</span></div></div>
+          <div class="ex-tip">Loop mini-band around ankles or just above knees. Quarter-squat position. Step sideways, keeping tension in the band at all times. Walk 10–15 steps each direction. This is the single best exercise for gluteus medius — critical for knee health and athletic power.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">3 × 15 steps / direction</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=resistance+band+lateral+monster+walk+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card">
+        <div class="card-accent legs-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">LEGS · BAND · 04</div>
+          <div class="ex-name">Band Hamstring Curl (Prone)</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Hamstrings</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Gastrocnemius</span></div></div>
+          <div class="ex-tip">Anchor band at ground level, loop around ankles. Lie face down. Curl both heels toward glutes against band resistance. This is one of the few ways to isolate hamstrings without a machine. Squeeze at full contraction and control the negative.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">3 × 15 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=resistance+band+prone+hamstring+curl+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card">
+        <div class="card-accent legs-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">LEGS · BAND · 05</div>
+          <div class="ex-name">Band Clamshell</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Gluteus Medius</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Gluteus Minimus</span><span class="badge badge-secondary">Piriformis</span></div></div>
+          <div class="ex-tip">Lie on your side, knees bent to 90°, band above knees. Rotate top knee open like a clamshell — don't let your hips roll back. Isolates the hip abductors and external rotators. Essential for knee stability, especially if you have valgus knee collapse (knees caving in on squats).</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">3 × 20 reps / side</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=resistance+band+clamshell+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+    </div>
+
+    <!-- LEGS BODYWEIGHT -->
+    <div id="legs-bw" class="eq-panel">
+      <div class="section-lbl">Bodyweight Leg Exercises</div>
+
+      <div class="ex-card starred">
+        <div class="card-accent legs-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">LEGS · BW · 01</div>
+          <div class="ex-name">Bulgarian Split Squat</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Quads</span><span class="badge badge-primary">Glutes</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Hamstrings</span><span class="badge badge-secondary">Hip Flexors</span><span class="badge badge-secondary">Core</span></div></div>
+          <div class="ex-tip">Rear foot elevated on a bench, front foot out in front. Lower your body straight down until rear knee is just off the floor. Keep torso upright (quad emphasis) or lean forward (glute emphasis). This is arguably harder than a barbell squat — you will feel this in one exercise alone.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">4 × 8–12 reps / leg</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=bulgarian+split+squat+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card starred">
+        <div class="card-accent legs-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">LEGS · BW · 02</div>
+          <div class="ex-name">Jump Squat</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Quads</span><span class="badge badge-primary">Glutes</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Hamstrings</span><span class="badge badge-secondary">Calves</span><span class="badge badge-secondary">Core</span></div></div>
+          <div class="ex-tip">Squat down then explode upward, leaving the ground. Land softly on mid-foot, immediately absorb into the next squat. Develops explosive power and fast-twitch muscle fibers. Adds metabolic and cardiovascular stimulus to a leg session. Do NOT do these if knees are sore.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">3 × 10–15 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=jump+squat+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card">
+        <div class="card-accent legs-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">LEGS · BW · 03</div>
+          <div class="ex-name">Glute Bridge (Single-Leg)</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Gluteus Maximus</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Hamstrings</span><span class="badge badge-secondary">Core</span></div></div>
+          <div class="ex-tip">Lie on back, one knee bent foot flat, other leg extended. Drive through the grounded heel to raise hips until body forms a straight line. Squeeze glute hard at the top. The single-leg version doubles the load and demands core stability. Progress to elevated single-leg hip thrust.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">3 × 15 reps / leg</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=single+leg+glute+bridge+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card">
+        <div class="card-accent legs-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">LEGS · BW · 04</div>
+          <div class="ex-name">Wall Sit</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Quadriceps (isometric)</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Glutes</span><span class="badge badge-secondary">Hip Flexors</span></div></div>
+          <div class="ex-tip">Back flat against wall, thighs parallel to floor, knees at 90°. Hold the position. This is a pure quad isometric hold — brutal and effective. Time yourself and try to beat your previous record. Can be loaded by placing a weight plate on your thighs. Great finisher at end of leg day.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">3 × 45–90 sec hold</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=wall+sit+tutorial+proper+form" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card">
+        <div class="card-accent legs-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">LEGS · BW · 05</div>
+          <div class="ex-name">Nordic Hamstring Curl</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Hamstrings (eccentric)</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Glutes</span><span class="badge badge-secondary">Core</span></div></div>
+          <div class="ex-tip">Kneel on a mat, feet anchored under a couch/partner. Lower your body to the floor as slowly as possible by extending at the knees — use hands to push back up if needed. One of the most scientifically validated injury-prevention exercises for hamstrings. Start with just 3–5 reps; it's extremely demanding.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">3 × 5–8 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=nordic+hamstring+curl+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+
+      <div class="ex-card">
+        <div class="card-accent legs-accent"></div>
+        <div class="card-body">
+          <div class="ex-number">LEGS · BW · 06</div>
+          <div class="ex-name">Standing Calf Raise (BW)</div>
+          <div class="muscle-row"><div class="muscle-label">Primary</div><div class="muscle-badges"><span class="badge badge-primary">Gastrocnemius</span></div></div>
+          <div class="muscle-row"><div class="muscle-label">Secondary</div><div class="muscle-badges"><span class="badge badge-secondary">Soleus</span></div></div>
+          <div class="ex-tip">On a step edge, lower heels maximally then rise to full toe. Do these slowly — 3 sec up, 3 sec down. For added challenge, do them single-leg. The deep heel drop at the bottom is non-negotiable for full gastrocnemius stretch. 100+ reps per session is not unreasonable for calf growth.</div>
+        </div>
+        <div class="card-footer"><span class="sets-info">4 × 25–30 reps</span><a class="yt-btn" href="https://www.youtube.com/results?search_query=bodyweight+standing+calf+raise+tutorial" target="_blank"><span class="yt-icon">▶</span> Watch</a></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /content -->
+
+<!-- FOOTER -->
+<footer style="border-top:1px solid var(--border);padding:32px 24px;text-align:center;">
+  <div style="font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:.06em;">
+    ⭐ = KEY LIFT &nbsp;·&nbsp; Log every session in Hevy &nbsp;·&nbsp; Progressive overload is everything
+  </div>
+  <div style="font-size:11px;color:#333;margin-top:8px;">PPL · 6 days/week · Rest Thursday</div>
+</footer>
+
+<script>
+  // ── Day switching ──
+  function switchDay(day) {
+    document.querySelectorAll('.day-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('panel-' + day).classList.add('active');
+    document.querySelector('.' + day + '-tab').classList.add('active');
+    // Reset eq tab to dumbbells when switching day
+    switchEq(day, 'dumbbells');
+    const eqTabs = document.querySelectorAll('#eq-' + day + ' .eq-tab');
+    eqTabs.forEach((t, i) => t.classList.toggle('active', i === 0));
+  }
+
+  // ── Equipment switching ──
+  function switchEq(day, eq) {
+    // Hide all eq panels for this day
+    ['dumbbells', 'bands', 'bw'].forEach(e => {
+      const el = document.getElementById(day + '-' + e);
+      if (el) el.classList.remove('active');
+    });
+    const target = document.getElementById(day + '-' + eq);
+    if (target) target.classList.add('active');
+
+    // Update eq tab styles
+    const eqTabs = document.querySelectorAll('#eq-' + day + ' .eq-tab');
+    const eqMap = { 'dumbbells': 0, 'bands': 1, 'bw': 2 };
+    eqTabs.forEach((t, i) => t.classList.toggle('active', i === eqMap[eq]));
+  }
+
+  // ── Bind eq tabs to correct day ──
+  document.querySelectorAll('.eq-tabs').forEach(tabGroup => {
+    const day = tabGroup.id.replace('eq-', '');
+    tabGroup.querySelectorAll('.eq-tab').forEach((tab, i) => {
+      const eqs = ['dumbbells', 'bands', 'bw'];
+      tab.onclick = function() { switchEq(day, eqs[i]); };
+    });
+  });
+
+  // ── Hero pill smooth scroll ──
+  document.querySelectorAll('.pill').forEach(p => {
+    p.addEventListener('click', () => {
+      document.querySelector('.nav-wrap').scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+</script>
+
+</body>
+</html>
